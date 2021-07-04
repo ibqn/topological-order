@@ -1,4 +1,4 @@
-class DAGraph:
+class DGraph:
     def __init__(self):
         self.nodes = {}
 
@@ -51,8 +51,46 @@ class TopSort:
         ordering.insert(0, node)
 
 
+class Cycle:
+    def __init__(self, graph):
+        self.marked = {}
+        self.on_stack = {}
+        self.edge_to = {}
+        self.cycle = None
+
+        for node in graph.get_nodes():
+            if not self.marked.get(node, False) and not self.cycle:
+                self._dfs(graph, node)
+
+    def _dfs(self, graph, node_v):
+        self.marked[node_v] = True
+        self.on_stack[node_v] = True
+
+        for node in graph.get_nodes_at(node_v):
+            if self.cycle:
+                return
+
+            if not self.marked.get(node, False):
+                self.edge_to[node] = node_v
+                self._dfs(graph, node)
+            elif self.on_stack.get(node, False):
+                self.cycle = []
+                x = node_v
+                while x != node:
+                    self.cycle.append(x)
+                    x = self.edge_to[x]
+                self.cycle.append(node)
+                self.cycle.append(node_v)
+                print("match", node, self.cycle)
+
+        self.on_stack[node_v] = False
+
+    def has_cycle(self):
+        return self.cycle != None
+
+
 if __name__ == "__main__":
-    graph = DAGraph()
+    graph = DGraph()
 
     edges = [
         (0, 1),
@@ -74,3 +112,23 @@ if __name__ == "__main__":
     topsort = TopSort()
 
     print(f"topological order: {topsort.topsort(graph)}")
+
+    cycle = Cycle(graph)
+
+    print(f"has {'' if cycle.has_cycle() else 'no '}cycle ")
+
+    files = ["tinyDG.txt", "tinyDAG.txt"]
+
+    for file in files:
+        with open(file, "r") as f:
+            edges = [e for e in map(lambda l: l.split(), f.readlines()) if len(e) == 2]
+
+        graph = DGraph()
+
+        for edge in edges:
+            # print(edge)
+            graph.add_edge(*edge)
+
+        cycle = Cycle(graph)
+
+        print(f"has {'' if cycle.has_cycle() else 'no '}cycle ")
